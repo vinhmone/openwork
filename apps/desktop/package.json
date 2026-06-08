@@ -12,8 +12,7 @@
   "scripts": {
     "dev": "node ./scripts/electron-dev.mjs",
     "dev:electron": "node ./scripts/electron-dev.mjs",
-    "dev:windows": "node ./scripts/dev-windows.mjs",
-    "dev:windows:x64": "node ./scripts/dev-windows.mjs x64",
+    "dev:windows": "node ./scripts/electron-dev.mjs",
     "build": "node ./scripts/electron-build.mjs",
     "build:electron": "node ./scripts/electron-build.mjs",
     "package:electron": "pnpm run build:electron && pnpm exec electron-builder --config electron-builder.yml",

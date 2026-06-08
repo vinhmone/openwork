@@ -222,7 +222,11 @@ if (!viteReady) {
 }
 
 if (!viteReady) {
-  uiChild = run(pnpmCmd, ["-w", "dev:ui"], {
+  // On Windows the root `dev:ui` script uses a bash-style env prefix that cmd.exe
+  // cannot parse, so spawn the prefix-free app script instead. The child env below
+  // already injects OPENWORK_DEV_MODE/OPENWORK_DATA_DIR.
+  const viteArgs = process.platform === "win32" ? ["--filter", "@openwork/app", "dev:windows"] : ["-w", "dev:ui"];
+  uiChild = run(pnpmCmd, viteArgs, {
     cwd: repoRoot,
     env: {
       ...process.env,
@@ -241,10 +245,17 @@ const resolvedStartUrl = await waitForVite(startUrl);
 const cdpPortRaw = process.env.OPENWORK_ELECTRON_REMOTE_DEBUG_PORT?.trim() ?? "";
 const cdpPort = cdpPortRaw === "" || cdpPortRaw === "0" ? "" : cdpPortRaw;
 
+// ELECTRON_RUN_AS_NODE forces the electron binary to behave like plain Node,
+// which breaks loading the Electron main process (no `electron` module, native
+// addon mismatch). Some shells (e.g. VS Code's integrated terminal) export it,
+// so strip it from the child env to guarantee Electron launches as Electron.
+const electronEnv = { ...process.env };
+delete electronEnv.ELECTRON_RUN_AS_NODE;
+
 electronChild = run(pnpmCmd, ["exec", "electron", "./electron/main.mjs"], {
   cwd: desktopRoot,
   env: {
-    ...process.env,
+    ...electronEnv,
     OPENWORK_DEV_MODE: process.env.OPENWORK_DEV_MODE ?? "1",
     OPENWORK_DATA_DIR: process.env.OPENWORK_DATA_DIR ?? defaultDevDataDir,
     OPENWORK_ELECTRON_START_URL: resolvedStartUrl,
