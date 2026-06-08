@@ -204,6 +204,23 @@ describe("deriveOpenTargets", () => {
     expect(targets.map((target) => target.value)).not.toContain(".opencode/skills/example/SKILL.md");
   });
 
+  it("collects verified text/code files now that text is a collectible preview", () => {
+    const targets = deriveOpenTargets([
+      toolMessage("msg_txt", "write", { filePath: "notes/todo.txt" }, { filePath: "notes/todo.txt" }),
+      toolMessage("msg_ts", "write", { filePath: "src/index.ts" }, { filePath: "src/index.ts" }),
+      message("msg_1", "assistant", "Created notes/todo.txt and src/index.ts"),
+    ]);
+
+    const txt = targets.find((target) => target.value === "notes/todo.txt");
+    const ts = targets.find((target) => target.value === "src/index.ts");
+
+    expect(txt).toMatchObject({ preview: "text" });
+    expect(ts).toMatchObject({ preview: "text" });
+    expect(txt ? isCollectibleArtifactTarget({ ...txt, exists: true }) : false).toBe(true);
+    expect(ts ? isCollectibleArtifactTarget({ ...ts, exists: true }) : false).toBe(true);
+    expect(txt ? isCollectibleArtifactTarget({ ...txt, exists: false }) : true).toBe(false);
+  });
+
   it("does not collect server-verified missing file targets", () => {
     const target = deriveOpenTargets([
       toolMessage("msg_tool", "write", { filePath: "index.html" }, { filePath: "index.html" }),

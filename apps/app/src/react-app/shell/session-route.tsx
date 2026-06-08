@@ -48,7 +48,6 @@ import {
   type WorkspaceList,
 } from "@/app/lib/desktop";
 import type {
-  ComposerAttachment,
   ComposerDraft,
   ComposerPart,
   ModelOption,
@@ -65,6 +64,7 @@ import type {
   WorkspaceSessionGroup,
 } from "@/app/types";
 import { buildFeedbackUrl } from "@/app/lib/feedback";
+import { attachmentMime, fileToDataUrl } from "@/app/lib/attachment-mime";
 import {
   getWorkspaceTaskLoadErrorDisplay,
   isDesktopRuntime,
@@ -423,23 +423,6 @@ function isActiveSessionStatus(status: unknown) {
 function getSessionStatus(session: any) {
   const status = session?.status ?? session?.state ?? session?.runStatus ?? null;
   return typeof status === "string" ? status : normalizeSessionStatus(status);
-}
-
-async function fileToDataUrl(file: File, mimeType: string) {
-  return await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error(`Failed to read attachment: ${file.name}`));
-    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
-    reader.readAsDataURL(new Blob([file], { type: mimeType }));
-  });
-}
-
-function attachmentMime(attachment: ComposerAttachment) {
-  if (attachment.kind === "image") return attachment.mimeType;
-  if (attachment.mimeType === "application/pdf") return attachment.mimeType;
-  if (attachment.mimeType === "application/json") return "text/plain";
-  if (attachment.mimeType.startsWith("text/")) return "text/plain";
-  return attachment.mimeType;
 }
 
 async function draftToParts(draft: ComposerDraft, workspaceRoot: string) {

@@ -9,6 +9,7 @@ import type {
 
 import { t } from "../../../../i18n";
 import { unwrap } from "../../../../app/lib/opencode";
+import { attachmentMime, fileToDataUrl } from "../../../../app/lib/attachment-mime";
 import {
   abortSession as abortSessionTyped,
   abortSessionSafe,
@@ -50,25 +51,6 @@ type SessionActionsSnapshot = {
 };
 
 const FLUSH_PROMPT_EVENT = "openwork:flushPromptDraft";
-
-const fileToDataUrl = (file: File, mimeType: string) =>
-  new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error(`Failed to read attachment: ${file.name}`));
-    reader.onload = () => {
-      const result = typeof reader.result === "string" ? reader.result : "";
-      resolve(result);
-    };
-    reader.readAsDataURL(new Blob([file], { type: mimeType }));
-  });
-
-function attachmentMime(attachment: ComposerAttachment) {
-  if (attachment.kind === "image") return attachment.mimeType;
-  if (attachment.mimeType === "application/pdf") return attachment.mimeType;
-  if (attachment.mimeType === "application/json") return "text/plain";
-  if (attachment.mimeType.startsWith("text/")) return "text/plain";
-  return attachment.mimeType;
-}
 
 export function createSessionActionsStore(options: {
   client: () => Client | null;
